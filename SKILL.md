@@ -34,7 +34,8 @@ default; `--folder` to choose) and remembers where it is:
 1. Run `setup.py`. It creates the folders and checks Python, FFmpeg, transcription,
    face detection and disk space, printing exactly what is missing.
 2. Install anything missing for them, one line of explanation each:
-   - FFmpeg: Mac `brew install ffmpeg` (install Homebrew first if needed);
+   - FFmpeg: Mac `brew install ffmpeg-full` and make it the default `ffmpeg`
+     (install Homebrew first if needed). The regular `ffmpeg` formula can't draw captions;
      Windows `winget install Gyan.FFmpeg`, then a new terminal.
    - Python packages: `python3 -m pip install faster-whisper opencv-python-headless`
 3. Re-run `setup.py --check` until everything is OK.
