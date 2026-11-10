@@ -1,0 +1,25 @@
+{
+  "_about": "MIXED TYPE: the key phrase huge and heavy, the small words in a handwritten marker tucked above-left and below-right. Write the hook as 'small words *BIG PHRASE* small words'.",
+  "font_file": "ArchivoBlack-Regular.ttf",
+  "uppercase": false,
+  "color": "#EED9C8",
+  "line_height": 0.95,
+  "tracking": -0.01,
+  "max_size": 190,
+  "target_size": 120,
+  "min_size": 80,
+  "max_lines": 2,
+  "small": {
+    "font_file": "PermanentMarker-Regular.ttf",
+    "uppercase": true,
+    "color": "#C9F24A",
+    "scale": 0.42,
+    "rotate": 3
+  },
+  "shadow": {
+    "blur": 14,
+    "alpha": 0.5,
+    "offset": 4
+  },
+  "min_top_room": 230
+}

@@ -37,7 +37,7 @@ default; `--folder` to choose) and remembers where it is:
    - FFmpeg: Mac `brew install ffmpeg-full` and make it the default `ffmpeg`
      (install Homebrew first if needed). The regular `ffmpeg` formula can't draw captions;
      Windows `winget install Gyan.FFmpeg`, then a new terminal.
-   - Python packages: `python3 -m pip install faster-whisper opencv-python-headless`
+   - Python packages: `python3 -m pip install faster-whisper opencv-python-headless Pillow`
 3. Re-run `setup.py --check` until everything is OK.
 4. Setup test: with a short video in `Raw/`, run `python3 SKILL/scripts/edit.py --auto`.
    The first run downloads the speech model (a few minutes). Success = a video in
@@ -50,10 +50,13 @@ When they share reference reels or screenshots (in chat or in `References/`):
    `ffmpeg -i "ref.mp4" -vf "fps=1,scale=360:-2,tile=4x3" -frames:v 1 "References/ref-frames.jpg"`
 2. Describe what you see: caption font feel, size, colors, highlight, words at once,
    position, ALL CAPS or not, boxes or outlines, hook style, callouts, cut speed, zooms.
-3. Pick the closest `look` (see `SKILL/assets/looks/*.json`): **clean** (default) = white
-   sentence-case headline above the head, plain white captions; **boxed** = black hook on a
-   white box on the chest, white all-caps captions. `hook.position` is "top" or "chest". Put every difference in `overrides`
-   (same keys as the look file, e.g. `"captions": {"highlight_color": "#00E5FF"}`).
+3. Pick the closest `look` (see `SKILL/assets/looks/*.json`): **clean** (default) = bold
+   hook, plain white captions; **boxed** = bubble hook, white all-caps captions. Put every
+   caption difference in `overrides` (same keys as the look file, e.g.
+   `"captions": {"highlight_color": "#00E5FF"}`).
+   For hooks, match their references to the closest hook style (bold, bubble, mixed) and
+   save it as `"hook": {"template": "..."}`; put color or font differences in
+   `hook_styles` (see "Hook styles"). Show a `hooks.py` preview to confirm.
 4. Write it up in `Rules/STYLE.md` (plain English, list the references).
 5. Read the style back in a few lines and ask if anything is off. Ask for brand colors
    and words they always/never use; save them in `brand`.
@@ -74,9 +77,10 @@ When they share reference reels or screenshots (in chat or in `References/`):
      rambles by adding `[first, last]` word numbers to `remove_words`. Always keep the
      LAST good take.
    - **Hook:** write `hook.text`: 3 to 7 punchy words from the video's main promise, in
-     their voice (STYLE.md), in sentence case unless the look is all caps. Only wrap a
-     word in `*stars*` (highlight color) if their style asks for it. If they gave a hook,
-     use it exactly.
+     their voice (STYLE.md). If they gave a hook, use it exactly. Then pick
+     `hook.style` (see "Hook styles" below): their favorite from STYLE.md, else the one that
+     suits this hook. You choose the style and the words; never try to design the hook
+     yourself, and never change fonts, sizes or spacing per video.
    - **Callouts:** 1 to 3 on key numbers, steps or punchlines:
      `{"text": "3X MORE LEADS", "start": 12.4, "end": 14.0}` (original-video times;
      take them from `words`).
@@ -111,7 +115,7 @@ Notes are how the editor gets good. For each note:
 - Mappings: bigger/smaller captions -> `overrides.captions.size`; captions too close to
   the chin -> `gap_below_chin`; more/fewer words -> `words_per_caption`; caps or not ->
   `uppercase`; different highlight -> `highlight_color`; boxes -> `box_color`; whole
-  phrase vs word-by-word -> `mode` ("line" or "word"); bigger hook -> `hook.size`;
+  phrase vs word-by-word -> `mode` ("line" or "word"); bigger/smaller hook -> `hook_styles.<style>.max_size`; hook color -> `hook_styles.<style>.color`; different hook font -> `hook_styles.<style>.font_file`;
   tighter/looser pacing -> `rules.cutting.max_pause` (0.15 tight, 0.4 relaxed) and
   `cut_between_sentences`; clipped word endings -> raise `pad_after_word`; no zooms ->
   `zoom.punch_in_on_cuts: false`; stronger punch-ins -> `zoom.amount`; music too loud ->
@@ -128,13 +132,41 @@ Notes are how the editor gets good. For each note:
 4. Give a short table: version, hook text, file. Suggest posting them as Instagram trial
    reels and comparing views, follows and leads; save the winning hook style to STYLE.md.
 
+## Hook styles
+
+Hooks are locked templates drawn as sharp images (`SKILL/assets/hooks/*.json`,
+`scripts/hooks.py`). Fonts, size, line breaks, spacing, colors and padding are measured
+by the script, so every hook looks designed and consistent.
+
+- **bold**: huge condensed all-caps title, fills the width (default for the clean look).
+  Best for short, punchy promises: "How to tell a better story".
+- **bubble**: dark serif title on a white rounded card (default for the boxed look).
+  Best for statements and longer hooks; reads on any background.
+- **mixed**: the key phrase huge and heavy, the small words in a handwritten marker.
+  Write it as `small words *BIG PHRASE* small words`, e.g. `why i *QUIT $50k* a month`.
+  Best when one number or phrase carries the hook.
+
+Placement is automatic: the hook goes above the head when there's real room there, and
+across the chest (clear of Instagram's buttons) when there isn't; captions tuck under it.
+Set `hook.position` in the plan to "top" or "chest" only if they ask for it.
+
+Make it theirs (save in `Rules/style.json` overrides, never in the asset files):
+- favorite style: `"hook": {"template": "bubble"}`
+- tweak a style: `"hook_styles": {"bold": {"color": "#FFFFFF", "font_file": "MyFont.ttf"}}`
+  (their font files go in `Rules/fonts/`). Keys: `color`, `accent_color`, `uppercase`,
+  `font_file`, `max_size`, `line_height`, `tracking`, `box` (bubble), `small` (mixed).
+- `*word*` in a bold or bubble hook uses `accent_color`.
+- Preview before rendering a whole video:
+  `python3 SKILL/scripts/hooks.py "their hook" --style bold --frame "a frame.jpg"`
+  (pull a frame with `ffmpeg -ss 2 -i "video" -frames:v 1 frame.jpg`). Show them the
+  preview and adjust until they love it, then save it.
+
 ## How the layout works (so you can explain it)
 
 - Captions sit on one steady line just under the lowest point the chin reaches, across
   the chest, never lower than the Instagram safe zone (bottom ~430px).
-- The hook is a static title from the very first frame, at the top over hair/cap, and
-  hard-cuts off. If the face is too high for it, it takes the captions' spot instead and
-  the captions wait.
+- The hook is a static title from the very first frame and hard-cuts off. It goes above
+  the head when there's room, otherwise across the chest with the captions tucked under it.
 - Callouts go at the top when there's room, otherwise they briefly replace the captions.
 - Punch-ins alternate clip by clip, centered on the face, cut from the full-resolution
   original so they stay sharp.

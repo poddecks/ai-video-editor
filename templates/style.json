@@ -6,6 +6,7 @@
   "overrides": {
     "captions": {},
     "hook": {},
+    "hook_styles": {},
     "callouts": {},
     "zoom": {}
   },

@@ -24,10 +24,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (ASSETS, edge_levels, fail, fmt_time, load_audio, load_config,  # noqa: E402
                     load_json, probe, require_ffmpeg, run, snap_to_silence, workspace)
 import faces as facemod  # noqa: E402
+import hooks  # noqa: E402
 
 SAFE_BOTTOM = 430   # px at the bottom that Instagram's caption/username/audio covers
 SAFE_TOP = 200      # px at the top (status bar, "Reels" header)
 SIDE = 110          # side margins (right side buttons sit over ~x>950)
+TOP_SIDE = 70       # top titles can go wider: the buttons only start halfway down
+RIGHT_BUTTONS = 150  # keep chest text this far from the right edge (like, comment, share)
 
 
 # ---------- timeline ----------
@@ -214,7 +217,7 @@ def clip_windows(start, end, blocks):
     return [p for p in pieces if p[1] - p[0] > 0.04]
 
 
-def build_layout(plan, tl, style, W, H, clip_faces):
+def build_layout(plan, tl, style, W, H, clip_faces, work=None, ws=None):
     """Decide where every piece of text goes. Returns (ass_text, layout_boxes, notes)."""
     cap, hook, call = style["captions"], style["hook"], style["callouts"]
     notes = []
@@ -272,9 +275,12 @@ def build_layout(plan, tl, style, W, H, clip_faces):
     soft = {"Caption": cap.get("soft_shadow"), "Hook": hook.get("soft_shadow"), "Callout": False}
 
     def event(layer, start, end, name, top, text, w, h, label):
+        when = f"{ass_time(start)},{ass_time(end)},{name},,0,0,{int(top)},,"
         if soft.get(name):
-            text = "{\\blur3}" + text
-        lines.append(f"Dialogue: {layer},{ass_time(start)},{ass_time(end)},{name},,0,0,{int(top)},,{text}")
+            # Soft shadow on its own layer underneath, so the letters themselves stay sharp
+            # (blurring the text event itself is what made captions look fuzzy).
+            lines.append(f"Dialogue: {layer * 2},{when}{{\\1a&HFF&\\3a&H90&\\bord7\\shad0\\blur9}}{text}")
+        lines.append(f"Dialogue: {layer * 2 + 1},{when}{text}")
         layout.append({"start": start, "end": end, "x1": (W - w) / 2, "x2": (W + w) / 2,
                        "y1": top - 6, "y2": top + h + 6, "label": label})
 
@@ -284,7 +290,51 @@ def build_layout(plan, tl, style, W, H, clip_faces):
 
     # Hook: static title from frame 0, hard cut off. Above the head if it fits, else the captions' spot.
     htext = ((plan.get("hook") or {}).get("text") or "").strip()
-    if hook.get("enabled", True) and htext:
+    hstyle = (plan.get("hook") or {}).get("style") or hook.get("template")
+    if hook.get("enabled", True) and htext and hstyle and work is not None:
+        # Locked template drawn as a crisp image (see hooks.py). The AI only picks the
+        # style, the words and top vs chest; size, breaks and spacing are measured here.
+        secs = min(float(plan["hook"].get("seconds", hook.get("seconds_on_screen", 3))), tl.total)
+        t = hooks.template(hstyle, style)
+        where = (plan.get("hook") or {}).get("position") or t.get("position") or hook.get("position", "top")
+        res, top = None, None
+        if where != "chest":
+            top_y = max(hook.get("position_from_top", 230), SAFE_TOP + 20)
+            heads = [f["head_top"] for f in clip_faces if f and f["o_s"] < secs and f["o_e"] > 0]
+            room = (min(heads) if heads else H * 0.3) - 24 - top_y   # clear of hair / cap
+            if room >= t.get("min_top_room", 200):
+                res = hooks.render(htext, t, W - 2 * TOP_SIDE, room, ws)
+            if res:
+                top = top_y
+            else:
+                notes.append("Hook moved onto the chest because there isn't room above your head.")
+        if not res:   # across the chest, clear of the right-side buttons
+            top = chin_line + 60
+            room = max_cap_top - top
+            res = hooks.render(htext, t, W - SIDE - RIGHT_BUTTONS, room, ws) if room > 0 else None
+            if not res:   # no clean gap under the chin: smallest size, sitting as low as allowed
+                res = hooks.render(htext, dict(t, min_size=int(t["min_size"] * 0.7)),
+                                   W - SIDE - RIGHT_BUTTONS, max(room, t["min_size"] * 2.2), ws)
+                if not res:
+                    fail("The hook is too long to fit. Use fewer words.")
+                notes.append("Tight framing: the hook may touch your chin. Film with more room "
+                             "below your face, or use a shorter hook.")
+            top = min(top, max_cap_top - (res[1][3] - res[1][1]))
+        img, ink, _ = res
+        iw, ih = ink[2] - ink[0], ink[3] - ink[1]
+        chest_w = W - SIDE - RIGHT_BUTTONS
+        x = SIDE + (chest_w - iw) / 2 if top > H * 0.45 and iw <= chest_w else (W - iw) / 2
+        png = work / "hook.png"
+        img.save(png)
+        if top > H * 0.45:   # chest: captions tuck under it, or wait if there's no room
+            below = top + ih + 22
+            if below <= max_cap_top:
+                cap_moves.append((0, secs, max(below, cap_top)))
+            else:
+                blocks.append([0, secs])
+        layout.append({"start": 0, "end": secs, "x1": x, "x2": x + iw, "y1": top, "y2": top + ih,
+                       "label": "hook", "png": str(png), "px": int(x - ink[0]), "py": int(top - ink[1])})
+    elif hook.get("enabled", True) and htext:
         secs = min(float(plan["hook"].get("seconds", hook.get("seconds_on_screen", 3))), tl.total)
         plain = htext.replace("*", "")
         hpad = hook.get("outline_width", 20) if hook.get("box_color") else 0
@@ -484,7 +534,8 @@ def render(plan_path, ws, preview=False):
         if c["face"]:
             c["face"]["o_s"], c["face"]["o_e"] = t, t + c["e"] - c["s"]
         t += c["e"] - c["s"]
-    ass, layout, notes, cap_top = build_layout(plan, tl, style, W, H, [c["face"] for c in clips])
+    ass, layout, notes, cap_top = build_layout(plan, tl, style, W, H, [c["face"] for c in clips],
+                                               work=work, ws=ws)
     (work / "captions.ass").write_text(ass, encoding="utf-8")
 
     for k, c in enumerate(clips):   # no fade where two clips continue seamlessly
@@ -538,7 +589,17 @@ def render(plan_path, ws, preview=False):
         af.append(f"{''.join(mix)}amix=inputs={len(mix)}:duration=first:normalize=0,alimiter=limit=0.95[a]")
     else:
         af.append("[voice]anull[a]")
-    graph = "[0:v]subtitles=captions.ass:fontsdir=fonts,format=yuv420p[v];" + ";".join(af)
+    # Hook images go on top of the captions layer, at full sharpness.
+    vf, last = ["[0:v]subtitles=captions.ass:fontsdir=fonts[t0]"], "t0"
+    k = 0.5 if preview else 1.0
+    for n, b in enumerate(x for x in layout if x.get("png")):
+        idx = inputs.count("-i")
+        inputs += ["-loop", "1", "-framerate", str(fps), "-t", f"{b['end']:.3f}", "-i", b["png"]]
+        scale = f"[{idx}:v]scale=iw*{k}:ih*{k}[h{n}];" if preview else f"[{idx}:v]null[h{n}];"
+        vf.append(f"{scale}[{last}][h{n}]overlay={int(b['px'] * k)}:{int(b['py'] * k)}:eof_action=pass[t{n + 1}]")
+        last = f"t{n + 1}"
+    vf.append(f"[{last}]format=yuv420p[v]")
+    graph = ";".join(vf) + ";" + ";".join(af)
     (work / "filter.txt").write_text(graph, encoding="utf-8")
 
     out = Path(plan["output"])

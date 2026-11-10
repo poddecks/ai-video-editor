@@ -6,7 +6,7 @@ Turn Claude into your own video editor. Drop in a raw talking-head video, and ge
 - ✂️ Tight jump cuts: pauses, breaths and "ums" gone
 - 🙂 Face tracking: punch-ins centered on your face, sharp even from 4K
 - 💬 Word-by-word captions just under your chin, inside the Instagram safe zone
-- 🪝 A static hook title from the very first frame
+- 🪝 A designed hook title from the very first frame: three locked styles (Bold, Bubble, Mixed), placed above your head or across your chest automatically
 - 🎨 Two designed looks (Clean and Boxed) that you can fully customize
 - 📌 Callouts, sound effects, music, and balanced audio
 - ✅ A self-check on the final video that proves no text ever covers your face
@@ -24,7 +24,7 @@ Built for the **Build an AI Video Editor** community.
 | **Claude** | Any paid plan that includes Claude Code (Pro or higher) |
 | **Computer** | Mac or Windows that you can install apps on |
 | **Disk space** | 50 GB free recommended. Video files are big. |
-| **Python** | 3.9 or newer, plus faster-whisper and OpenCV (Claude installs these) |
+| **Python** | 3.9 or newer, plus faster-whisper, OpenCV and Pillow (Claude installs these) |
 | **FFmpeg** | Free video engine (Claude installs it in setup) |
 
 ---
@@ -80,7 +80,7 @@ The first edit downloads a speech-recognition model, so it takes a few extra min
 
 Everything about your editor lives in `AI Editor/Rules/`:
 
-- **style.json** is the look: pick `bold`, `boxed` or `clean`, then anything in `overrides` wins (caption font, size, colors, highlight, words on screen, hook, callouts, zoom).
+- **style.json** is the look: pick `clean` or `boxed`, then anything in `overrides` wins (caption font, size, colors, highlight, words on screen, hook style, callouts, zoom). Tweak a hook style's color or font under `hook_styles`.
 - **rules.json** is the rules: how tight the cuts are, which filler words get cut, output size, loudness, music and sound-effect levels.
 - **STYLE.md / RULES.md** are the same thing in plain English, plus the notes you've given over time.
 

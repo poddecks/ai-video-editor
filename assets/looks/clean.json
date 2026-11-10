@@ -19,6 +19,7 @@
     "gap_below_chin": 70
   },
   "hook": {
+    "template": "bold",
     "font": "Inter",
     "font_file": "Inter-Bold.otf",
     "size": 80,

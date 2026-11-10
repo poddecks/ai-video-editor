@@ -59,7 +59,8 @@ def check():
                             f"{fix.get(system, 'install an FFmpeg build with libass')}")
 
     for mod, label, pkg in (("faster_whisper", "faster-whisper (transcription)", "faster-whisper"),
-                            ("cv2", "OpenCV (face detection)", "opencv-python-headless")):
+                            ("cv2", "OpenCV (face detection)", "opencv-python-headless"),
+                            ("PIL", "Pillow (hook titles)", "Pillow")):
         found = importlib.util.find_spec(mod) is not None
         print(f"{OK if found else BAD} {label}")
         if not found:

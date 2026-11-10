@@ -1,0 +1,19 @@
+{
+  "_about": "BIG AND BOLD: huge condensed all-caps title that fills the width. Stops the scroll. Best above the head when there's open space.",
+  "font_file": "Anton-Regular.ttf",
+  "uppercase": true,
+  "color": "#FFE234",
+  "accent_color": "#FFFFFF",
+  "line_height": 0.92,
+  "tracking": 0,
+  "max_size": 200,
+  "target_size": 130,
+  "min_size": 80,
+  "max_lines": 3,
+  "shadow": {
+    "blur": 12,
+    "alpha": 0.45,
+    "offset": 4
+  },
+  "min_top_room": 230
+}

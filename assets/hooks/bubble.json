@@ -1,0 +1,25 @@
+{
+  "_about": "BUBBLE: dark serif title on a white rounded card. Easy to scan, feels editorial. Works on any background.",
+  "font_file": "DMSerifDisplay-Regular.ttf",
+  "uppercase": false,
+  "color": "#111111",
+  "accent_color": "#B4232A",
+  "line_height": 1.0,
+  "tracking": -0.01,
+  "max_size": 96,
+  "target_size": 80,
+  "min_size": 54,
+  "max_lines": 3,
+  "box": {
+    "color": "#FFFFFF",
+    "radius": 30,
+    "pad_x": 44,
+    "pad_y": 30
+  },
+  "shadow": {
+    "blur": 18,
+    "alpha": 0.25,
+    "offset": 6
+  },
+  "min_top_room": 150
+}
