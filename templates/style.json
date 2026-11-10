@@ -1,0 +1,18 @@
+{
+  "_help": "Your editor's LOOK. Pick a starting look (clean or boxed), then anything in 'overrides' wins. Claude fills these in from your reference videos. Colors are hex; sizes are pixels on a 1080x1920 frame.",
+
+  "look": "clean",
+
+  "overrides": {
+    "captions": {},
+    "hook": {},
+    "callouts": {},
+    "zoom": {}
+  },
+
+  "brand": {
+    "colors": [],
+    "always_say": [],
+    "never_say": []
+  }
+}

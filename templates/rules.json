@@ -1,0 +1,49 @@
+{
+  "_help": "Your editor's RULES. Change a number here and every future edit follows it. Times are in seconds.",
+  "output": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "max_length_seconds": 90
+  },
+  "cutting": {
+    "max_pause": 0.35,
+    "pad_before_word": 0.05,
+    "pad_after_word": 0.1,
+    "min_clip_length": 0.4,
+    "filler_words": [
+      "um",
+      "uh",
+      "umm",
+      "uhh",
+      "erm",
+      "er",
+      "ah",
+      "hmm",
+      "mm"
+    ],
+    "cut_between_sentences": 0.0,
+    "cut_crutch_words": true,
+    "crutch_words": [
+      "like",
+      "you know",
+      "i mean",
+      "basically",
+      "literally",
+      "kind of",
+      "sort of"
+    ]
+  },
+  "transcription": {
+    "model": "small.en",
+    "language": "en"
+  },
+  "audio": {
+    "loudness_lufs": -14,
+    "music_volume": 0.1,
+    "sound_effects": true,
+    "sfx_volume": 0.35,
+    "whoosh_on_hook": true,
+    "pop_on_callouts": true
+  }
+}

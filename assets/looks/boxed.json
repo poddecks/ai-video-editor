@@ -1,0 +1,47 @@
+{
+  "_about": "BOXED: black sentence-case hook on a white box sitting on the chest, bold white all-caps captions underneath. Punchy podcast-clip style.",
+  "captions": {
+    "mode": "word",
+    "font": "Poppins",
+    "font_file": "Poppins-Bold.ttf",
+    "size": 78,
+    "uppercase": true,
+    "words_per_caption": 2,
+    "text_color": "#FFFFFF",
+    "highlight_color": "#FFFFFF",
+    "outline_color": "#000000",
+    "outline_width": 2,
+    "shadow": 4,
+    "soft_shadow": true,
+    "box_color": null,
+    "pop_animation": true,
+    "position": "under_chin",
+    "gap_below_chin": 70
+  },
+  "hook": {
+    "font": "Inter",
+    "font_file": "Inter-Bold.otf",
+    "size": 76,
+    "uppercase": false,
+    "text_color": "#111111",
+    "highlight_color": "#111111",
+    "outline_color": "#FFFFFF",
+    "outline_width": 24,
+    "shadow": 0,
+    "soft_shadow": false,
+    "box_color": "#FFFFFF",
+    "position": "chest",
+    "position_from_top": 220,
+    "seconds_on_screen": 3.0
+  },
+  "callouts": {
+    "size": 58,
+    "uppercase": false,
+    "text_color": "#111111",
+    "box_color": "#FFFFFF"
+  },
+  "zoom": {
+    "punch_in_on_cuts": true,
+    "amount": 1.1
+  }
+}
