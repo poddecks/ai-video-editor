@@ -24,6 +24,17 @@ def default_folder():
     return (desk if desk.exists() else Path.home()) / "AI Editor"
 
 
+def has_subtitles(ffmpeg):
+    """The regular Homebrew ffmpeg can't burn in captions; ffmpeg-full can."""
+    import subprocess
+    try:
+        out = subprocess.run([ffmpeg, "-hide_banner", "-filters"], capture_output=True,
+                             text=True, timeout=30).stdout
+    except Exception:
+        return True  # don't block setup if the check itself fails
+    return any(line.split()[1:2] == ["subtitles"] for line in out.splitlines())
+
+
 def check():
     system = platform.system()
     problems = []
@@ -41,6 +52,11 @@ def check():
             hint = {"Darwin": "brew install ffmpeg",
                     "Windows": "winget install Gyan.FFmpeg  (then reopen the terminal)"}
             problems.append(f"Install FFmpeg: {hint.get(system, 'sudo apt install ffmpeg')}")
+        elif tool == "ffmpeg" and not has_subtitles(found):
+            print(f"{BAD} ffmpeg can't draw captions (no subtitles filter)")
+            fix = {"Darwin": "brew install ffmpeg-full, then make it the default ffmpeg"}
+            problems.append(f"Install an FFmpeg build with captions support: "
+                            f"{fix.get(system, 'install an FFmpeg build with libass')}")
 
     for mod, label, pkg in (("faster_whisper", "faster-whisper (transcription)", "faster-whisper"),
                             ("cv2", "OpenCV (face detection)", "opencv-python-headless")):

@@ -546,7 +546,7 @@ def render(plan_path, ws, preview=False):
         out = out.with_name(out.stem + " (preview).mp4")
     out.parent.mkdir(parents=True, exist_ok=True)
     print(f"Rendering {fmt_time(tl.total)} video...")
-    run(["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex_script", "filter.txt",
+    run(["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", graph,
          "-map", "[v]", "-map", "[a]", "-t", f"{tl.total:.3f}",
          "-c:v", "libx264", "-preset", "veryfast", "-crf", "28" if preview else "19",
          "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(out)], cwd=work)
